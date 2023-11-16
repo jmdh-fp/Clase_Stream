@@ -42,7 +42,7 @@ public class Main {
         Util.pintaProductos(listaProductos);
 
         // *** Forma 2. Creación usando una clase anónima.
-         Comparator<Producto> ordenPorCantEnStock = new Comparator<Producto>() {
+         Comparator<Producto> ordenPorCantEnStock = new Comparator<>() {
             @Override
             public int compare(Producto o1, Producto o2) {
                 return o1.getUnidadesEnExistencia() - o2.getUnidadesEnExistencia();
@@ -55,7 +55,7 @@ public class Main {
         Util.pintaProductos(listaProductos);
 
         // *** Forma 3. Creación del comparador con clase anónima en la llamada al método sort.
-        listaProductos.sort(new Comparator<Producto>() {
+        listaProductos.sort(new Comparator<>() {
             @Override
             public int compare(Producto o1, Producto o2) {
                 return o1.getUnidadesEnExistencia() - o2.getUnidadesEnExistencia();
@@ -63,7 +63,7 @@ public class Main {
         });
 
         // *** Forma 4. Utilizando expresiones lambda ya que Comparable es interface funcional
-        System.out.println("Ordenado por cant en stock de forma descendente");
+        System.out.println("\nOrdenado por cant en stock de forma descendente");
         listaProductos.sort(( o1, o2) ->   o2.getUnidadesEnExistencia() - o1.getUnidadesEnExistencia() );
         Util.pintaProductos(listaProductos);
 
@@ -72,7 +72,7 @@ public class Main {
         // Si no ordena bien la ñ y otros caracteres deberemos utiliza un Collator
         // Para que ordene bien los textos según alfabeto de la configuración local.
 
-        System.out.println("Ordenado por nombre de producto (usando collator");
+        System.out.println("\nOrdenado por nombre de producto (usando collator");
         Collator collator = Collator.getInstance(); // Recoge configuración local del SO de la máquina.
         // Ordenación por nombre producto usando el Collator
         listaProductos.sort((o1, o2) -> collator.compare(o1.getNombreProducto(), o2.getNombreProducto()));
@@ -120,7 +120,7 @@ public class Main {
         // Ordenación por familia y cantidad en stock descendente
         // Reutilizando los Comparator que ya teníamos.
 
-        Comparator<Producto> ordenFamiliaCantStock = new Comparator<Producto>() {
+        Comparator<Producto> ordenFamiliaCantStock = new Comparator<>() {
             @Override
             public int compare(Producto o1, Producto o2) {
                 int orden;
@@ -146,9 +146,10 @@ public class Main {
 
         System.out.println("\nLista de números no repes");
         // Crea arraylist de enteros.
-        List<Integer> listaNum = Arrays.asList(new Integer[]{45, 1,4,6,1,45,8,4});
+        List<Integer> listaNum = Arrays.asList(45, 1,4,6,1,45,8,4);
        // Crea hashSet de enteros.
         Set<Integer> listaSinRepes = new HashSet<>();
+
         // Añade los elementos del arrayList al hashSet. Los repetidos simplemente no los añadirá.
         for(Integer n: listaNum)
             listaSinRepes.add(n);
