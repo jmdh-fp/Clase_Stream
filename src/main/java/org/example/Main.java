@@ -116,6 +116,25 @@ public class Main {
         System.out.println("\n\nOrdenación por familia ");
         Util.pintaProductos(listaProductos);
 
+        //*** Ejemplo de ordenación por dos atributos
+        // Ordenación por familia y cantidad en stock descendente
+        // Reutilizando los Comparator que ya teníamos.
+
+        Comparator<Producto> ordenFamiliaCantStock = new Comparator<Producto>() {
+            @Override
+            public int compare(Producto o1, Producto o2) {
+                int orden;
+                if ((orden =ordenFamilia.compare(o1, o2) )!= 0) {
+                    return orden;
+                }
+                return ordenPorCantEnStock.compare(o2,o1) ;
+            }
+        };
+
+        listaProductos.sort(ordenFamiliaCantStock);
+        System.out.println("\nOrdenación por Familia y CantidadEnStock");
+        Util.pintaProductos(listaProductos);
+
         // *** Interface Set. Clases que la implementan: HashSet, TreeSet, LinkedHashSet
         // Consultar documentación para ver detalle de cada uno.
         // Todas las clases que implementa interface Set son collecciones que no admiten duplicados.

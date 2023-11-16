@@ -36,7 +36,11 @@ public class Util {
     }
 
      public static void   pintaProductos(List<Producto> lista){
-        for (Producto p: lista){
+         //return String.format("%6d %-35s %4d %4d %6.2f %4d %-20s %-10s",idProducto,nombreProducto, idProveedor,idCategoria,precioUnidad,unidadesEnExistencia,cantPorUnid,familia);
+
+         System.out.printf("%6s %-35s %6s %6s %7s %6s %-20s %-10s\n","idPro","nombreProducto", "idProv","idCat","preUnid","Stock","cantPorUnid","familia");
+
+         for (Producto p: lista){
             System.out.println(p.toString());
         }
     }

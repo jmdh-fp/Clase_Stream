@@ -100,7 +100,7 @@ public class Producto implements Comparable<Producto> {
 
     @Override
     public String toString() {
-        return String.format("%4d %-35s %4d %4d %6.2f %4d %-20s %-10s",idProducto,nombreProducto, idProveedor,idCategoria,precioUnidad,unidadesEnExistencia,cantPorUnid,familia);
+        return String.format("%6d %-35s %6d %6d %7.2f %6d %-20s %-10s",idProducto,nombreProducto, idProveedor,idCategoria,precioUnidad,unidadesEnExistencia,cantPorUnid,familia);
 
     }
     // Implementación de método abstracto de la interface Comparable
