@@ -3,189 +3,255 @@ package org.example;
 import org.example.model.Producto;
 import org.example.util.Util;
 
-import java.io.FileNotFoundException;
-import java.text.Collator;
+import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Main {
+    static List<Producto> products;
+    public static void main(String[] args) throws IOException {
+        products = Util.leeProductos2();
 
-    public static void main(String[] args) throws FileNotFoundException {
-        List<Producto> listaProductos = Util.leeProductos();
+        todosProductos();
+        consultasSimples();
+        consultasFiltradas();
+        consultasOrdenacion();
+        consultasAgrupados();
 
-        Util.pintaProductos(listaProductos);
-
-        // Ordenamos con el criterio implementado en la clase Producto
-        System.out.println("Lista ordenada por nombre producto ascendente");
-        Collections.sort(listaProductos);
-        Util.pintaProductos(listaProductos);
-
-        // Otra forma es usar un Comparator para establecer el criterio de ordenación
-        // Esto nos permite oredenar objetos de una clase que no implementa Comparable
-        // En caso de que la clase implemente Comparable, su criterio de ordenación es
-        // anulado por el que definamos en el Comparator.
-
-        // Comparator que ordena por unidedades en existencia, ascendente
-
-        // *** Forma 1. Creación de una clase que implementa la interface Comparator
-
-        // Clase anidada. Podemos crearla en un fichero aparte si nos interesa.
-        class ComparadorUnidExistencia implements Comparator<Producto>{
-            @Override
-            public int compare(Producto o1, Producto o2) {
-                return o1.getUnidadesEnExistencia() - o2.getUnidadesEnExistencia();
-            }
-        }
-
-        Comparator<Producto> objComparadorUnidExistencia = new ComparadorUnidExistencia();
-        // Ordenación usando el Comparator
-        listaProductos.sort(objComparadorUnidExistencia);
-        Util.pintaProductos(listaProductos);
-
-        // *** Forma 2. Creación usando una clase anónima.
-         Comparator<Producto> ordenPorCantEnStock = new Comparator<>() {
-            @Override
-            public int compare(Producto o1, Producto o2) {
-                return o1.getUnidadesEnExistencia() - o2.getUnidadesEnExistencia();
-            }
-        };
-
-        // Ordenación usando el Comparator
-        listaProductos.sort(ordenPorCantEnStock);
-        System.out.println("Ordenados por cantidad en stok ascendente");
-        Util.pintaProductos(listaProductos);
-
-        // *** Forma 3. Creación del comparador con clase anónima en la llamada al método sort.
-        listaProductos.sort(new Comparator<>() {
-            @Override
-            public int compare(Producto o1, Producto o2) {
-                return o1.getUnidadesEnExistencia() - o2.getUnidadesEnExistencia();
-            }
-        });
-
-        // *** Forma 4. Utilizando expresiones lambda ya que Comparable es interface funcional
-        System.out.println("\nOrdenado por cant en stock de forma descendente");
-        listaProductos.sort(( o1, o2) ->   o2.getUnidadesEnExistencia() - o1.getUnidadesEnExistencia() );
-        Util.pintaProductos(listaProductos);
-
-        //*** Ordenaciones usando criterios locales. Por ejemplo para el alfabeto español
-        // hacer ordenación correcta de la ñ.
-        // Si no ordena bien la ñ y otros caracteres deberemos utiliza un Collator
-        // Para que ordene bien los textos según alfabeto de la configuración local.
-
-        System.out.println("\nOrdenado por nombre de producto (usando collator");
-        Collator collator = Collator.getInstance(); // Recoge configuración local del SO de la máquina.
-        // Ordenación por nombre producto usando el Collator
-        listaProductos.sort((o1, o2) -> collator.compare(o1.getNombreProducto(), o2.getNombreProducto()));
-        Util.pintaProductos(listaProductos);
-
-        // También se puede indicar con un objeto Locale
-        // Collator collator = Collator.getInstance(new Locale("es"));
-        // Ver. documentación de Collator para ver más opciones.
-
-        // *** Ordenación por criterios "subjetivos" no basada en valor númerico ni alfabético
-        // Queremos establecer un orden personalizado para familia.
-        // Orden subjetivo de importancia de más importante a menos: cereal, lacteo, carne, verdura
-        // Creamos un comparator para ello. Tiene más lógica que los que usado más arriba.
-
-        // Clase interna
-        class OrdenFamilia implements Comparator<Producto>{
-            // Colección hasMap para asignar a cada familia un peso (grado de importancia)
-            Map<String,Integer> familiasOrden;
-
-            // Constructor. Crea hashMap y mete las familias con su peso.
-            public OrdenFamilia() {
-                familiasOrden = new HashMap<>();
-                familiasOrden.put("cereal",1);
-                familiasOrden.put("lacteo",2);
-                familiasOrden.put("carne",3);
-                familiasOrden.put("verdura",4);
-            }
-
-            // Implementación del método de la interface Comparator.
-            // Criterio de ordenación basado el peso asignado.
-            @Override
-            public int compare(Producto o1, Producto o2) {
-               return familiasOrden.get(o2.getFamilia()) - familiasOrden.get(o1.getFamilia());
-            }
-        }
-
-        // Ordenamos por familia
-        // instancia del Comparador
-        Comparator<Producto> ordenFamilia = new OrdenFamilia();
-        listaProductos.sort(ordenFamilia);
-        System.out.println("\n\nOrdenación por familia ");
-        Util.pintaProductos(listaProductos);
-
-        //*** Ejemplo de ordenación por dos atributos
-        // Ordenación por familia y cantidad en stock descendente
-        // Reutilizando los Comparator que ya teníamos.
-
-        Comparator<Producto> ordenFamiliaCantStock = new Comparator<>() {
-            @Override
-            public int compare(Producto o1, Producto o2) {
-                int orden;
-                if ((orden =ordenFamilia.compare(o1, o2) )!= 0) {
-                    return orden;
-                }
-                return ordenPorCantEnStock.compare(o2,o1) ;
-            }
-        };
-
-        listaProductos.sort(ordenFamiliaCantStock);
-        System.out.println("\nOrdenación por Familia y CantidadEnStock");
-        Util.pintaProductos(listaProductos);
-
-        // *** Interface Set. Clases que la implementan: HashSet, TreeSet, LinkedHashSet
-        // Consultar documentación para ver detalle de cada uno.
-        // Todas las clases que implementa interface Set son collecciones que no admiten duplicados.
-
-        // ** Ejemplo uso HashMap.
-        // HashMap guarda elementos sin duplicados. No lo hace en ningún orden concreto. Cuando iteramos
-        // subre ella para extraer sus elementos estos son dados en un orden no determinado.
-        // LinkedHashSet sí extrae elementos en el mismo orden que se introdujeron.
-
-        System.out.println("\nLista de números no repes");
-        // Crea arraylist de enteros.
-        List<Integer> listaNum = Arrays.asList(45, 1,4,6,1,45,8,4);
-       // Crea hashSet de enteros.
-        Set<Integer> listaSinRepes = new HashSet<>();
-
-        // Añade los elementos del arrayList al hashSet. Los repetidos simplemente no los añadirá.
-        for(Integer n: listaNum)
-            listaSinRepes.add(n);
-
-        // Iteramos el hashmap y mostramos sus elementos por consola.
-        // Veremos que no números repetidos.
-        // OJO: El orden de salida es aleatorio. No se asegura ningún orden concreto.
-        for(Integer n: listaSinRepes)
-            System.out.println(n);
-
-        // Al constructor se le puede pasar objeto que implemente interface List
-        // Descartará los repetidos que haya en el arrayList.
-        Set<Integer> listaSinRepes2 = new HashSet<>(listaNum);
-
-        for (Integer n:listaSinRepes2)
-            System.out.println(n);
-
-
-        // ** Ejemplo con TreeSet.
-        // TreeSet ESTABLECE UN ORDEN en sus elementos. Utiliza internamente un arbol binario (red black tree)
-        // para ordenar los elementos. (Ver doc. para más info)
-
-        // Su constructo tb. admite List como entrada.
-        TreeSet<Integer> listaOrdenada = new TreeSet<>(listaNum);
-        System.out.println("Elementos ordenados y sin repes");
-        for(Integer n: listaOrdenada)
-            System.out.println(n);
-
-        // Probar a cambiar el products.csv y poner dos productos con el mismo nombre
-        // ¿Qúe ocurre al meter elementos en el treeset?
-        listaProductos = Util.leeProductos(); // Lectura del fichero tras el cambio.
-        TreeSet<Producto> listOrdProd = new TreeSet<>(listaProductos);
-
-        for(Producto p: listOrdProd)
-            System.out.println(p.toString());
     }
+
+        private static  void todosProductos() {
+            // Creamos el flujo
+            // Equivale a selec * from products
+            System.out.println("Todos los productos");
+            Stream<Producto> s = products.stream(); //flujo de elementos Producto
+            s.forEach(product -> System.out.println(product)); // imprime la lista de productos
+            // productStream.forEach(System.out::println); esta linea es equivalente a la anterior
+            System.out.println();
+        }
+
+    private static void consultasSimples() {
+        // Consultas Simpples select name from products
+        System.out.println("\n\n**Nombre de los productos");
+        //Stream<String> s = products.stream().map(Producto::getNombreProducto);
+        Stream<String> s = products.stream().map(p -> p.getNombreProducto());
+        //s.forEach(System.out::println);
+        s.forEach(e-> System.out.println(e));
+    }
+
+    private static void consultasFiltradas() {
+        // Filtrado
+        //   select name from products where units_in_stock < 10
+        // Importante el filter va antes del map
+
+        System.out.println("\n\n**Nombre de los productos con unidades en stock menor de 10");
+        Stream<String> s = products.stream()
+                .filter(e->e.getUnidadesEnExistencia() < 10)
+                .map(Producto::getNombreProducto);
+        s.forEach(System.out::println);
+
+    }
+
+    private static void consultasOrdenacion() {
+        //Orodenacion
+        // select name from products where units_in_stock < 1 order by units_in_stock asc
+//        El método sorted recibe un Comparator. Ésta misma interfaz Comparator tiene algunos métodos que nos serán de gran ayuda
+//
+//        comparingInt() Permite comparar elementos de tipo int
+//        comparingDouble() Permite comparar elementos de tipo double
+//        comparingLong() Permite comparar elementos de tipo long
+//        thenComparing() Permite anidar comparaciones. Útil cuándo deseamos ordenar por más de 1 atributo (ejemplo más adelante)
+        System.out.println("\n\n** Nombre de los productos con unidades en stock menor de 10 ordenados por unidades en stock ascendente");
+        Stream<String> s = products.stream()
+                .filter(p->p.getUnidadesEnExistencia() < 10)
+                .sorted((o1, o2) -> o1.getUnidadesEnExistencia()-o2.getUnidadesEnExistencia())
+                .map(Producto::getNombreProducto); //.map(Producto::toString);
+        s.forEach(System.out::println);
+        System.out.println();
+
+        // Ordenado de mayor a menor
+        System.out.println("\n\n** Nombre de los productos con unidades en stock menor de 10 ordenados por unidades en stock descedente");
+        s = products.stream()
+                .filter(p -> p.getUnidadesEnExistencia() < 10)
+                .sorted((o1, o2) -> o2.getUnidadesEnExistencia() - o1.getUnidadesEnExistencia())
+                .map(Producto::getNombreProducto);
+        s.forEach(System.out::println);
+        System.out.println();
+
+        System.out.println("\n\n** Nombre de los productos con unidades en stock menor de 10 ordenados  por unidad de stock de forma descendente y por nombre de producto de forma descendente");
+        s = products.stream()
+                .filter(p->p.getUnidadesEnExistencia()<10)
+                .sorted(Comparator.comparingInt(Producto::getUnidadesEnExistencia)
+                        .reversed()
+                        .thenComparing(Producto::getNombreProducto)
+                )
+                //.map(Producto::getNombreProducto);
+                .map(producto -> producto.getUnidadesEnExistencia() + " --- " + producto.getNombreProducto() );
+        s.forEach(System.out::println);
+        System.out.println();
+
+        System.out.println("\n\n** Nombre de los productos con unidades en stock menor de 10 ordenados  por unidad de stock de forma ascendente y por nombre de producto de forma descendente");
+        s = products.stream()
+                .filter(p->p.getUnidadesEnExistencia() < 10)
+                .sorted(Comparator.comparingInt(Producto::getUnidadesEnExistencia)
+                        .thenComparing(Comparator.comparing(Producto::getNombreProducto).reversed())
+                )
+                .map(Producto::getNombreProducto);
+        s.forEach(System.out::println);
+        System.out.println();
+
+        System.out.println("\n\n** Nombre de los productos con unidades en stock menor de 10 ordenados  por unidad de stock de forma ascendente y por nombre de producto de forma descendente");
+        // select productName, unitsInStock from products where unitsInStock < 10 order by unitsInStock desc, productName asc;
+        s = products.stream()
+                .filter(p -> p.getUnidadesEnExistencia() < 10)
+                //recordar que el método sorted recibe un Comparator.
+                .sorted(
+                        Comparator
+                                .comparing(Producto::getUnidadesEnExistencia) //ordenamos ascendente por unitsInStock
+                                .thenComparing( // después ordenamos por otro campo
+                                        Collections.reverseOrder( // pero este segundo campo será por orden descendente
+                                                Comparator.comparing(Producto::getNombreProducto) // el segundo campo a ordenar
+                                        )
+                                )
+                )
+                //.map(Producto::getNombreProducto);
+        .map(producto -> producto.getUnidadesEnExistencia() + " --- " + producto.getNombreProducto() );
+
+        s.forEach(System.out::println); //imprime el resultado en consola
+        System.out.println();
+
+        // Equivalente
+
+        s = products.stream()
+                .filter(p -> p.getUnidadesEnExistencia() < 10)
+                //recordar que el método sorted recibe un Comparator.
+                .sorted(
+                        Comparator
+                                .comparing(Producto::getUnidadesEnExistencia) //ordenamos ascendente por unitsInStock
+                                .thenComparing( // después ordenamos por otro campo
+                                        // pero este segundo campo será por orden descendente
+                                                Comparator.comparing(Producto::getNombreProducto).reversed() // el segundo campo a ordenar
+
+                                )
+                )
+                //.map(Producto::getNombreProducto);
+                .map(producto -> producto.getUnidadesEnExistencia() + " --- " + producto.getNombreProducto() );
+        System.out.println("Equivalente:");
+        s.forEach(System.out::println); //imprime el resultado en consola
+        System.out.println();
+
+
+
+//        El método sorted()recibe un Comparator
+//        La interfaz Comparator nos proporciona algúnos métodos que nos serán útiles para las ordenaciones.
+//        Existe una clase Collections que tiene un método reverseOrder() el cual devuelve un Comparator que impone el reverso de una ordenación.
+//        Hay que tener cuidado donde se aplican las operaciones como reversos ya que podríamos aplicarlos a toda la colección y no a los campos que deseamos.
+
+
+
+    }
+
+    private static void consultasAgrupados() {
+        // Agrupado
+        //   select name from products where units_in_stock < 10
+        // En SQL las operaciones como sum, max, min, avg, group by, partition by, etc., se llaman funciones de agregado.
+        // En Java, se especifican en el método collect
+        // Select count(1), supplierID from products GROUP BY  supplierID
+        System.out.println("Obtener el número de productos agrupados por proveedor");
+        Map<Integer, Long> c1 = products.stream()
+                .collect( //en el metodo collect se especifican las funciones de agregacion
+                        Collectors.groupingBy( // deseamos agrupar
+                                Producto::getIdProveedor, // agrupamos por proveedor
+                                Collectors.counting() // realizamos el conteo
+                        )
+                );
+
+        c1.forEach((s, c) -> System.out.printf("proveedor: %s: productos: %s \n", s, c));
+        System.out.println();
+
+//        Dado que en el método collect especificamos funciones de agregado, casi siempre nos auxiliaremos de la clase Collectors
+//        la cuál nos proporciona varios métodos de funciones de agregado. En este ejemplo, usamos el método groupingBy
+//        Si deseamos filtrar todos los productos que en almacen tengan menos de 20 unidades de existencia y agrupados por existencia,
+
+        Map<Integer, List<Producto>> c2 = products.stream()
+                .filter(p -> p.getUnidadesEnExistencia() < 20)
+                .collect(Collectors.groupingBy(Producto::getUnidadesEnExistencia));
+
+        c2.forEach((unidades, producto) -> System.out.printf("existencias: %s Productos: %s \n", unidades, producto));
+    }
+
+    private static void consultasAgregados() {
+        // Sumas, medias, etc.
+        // Select  unitsInStock, sum(unitPrice) from products GROUP BY unitsInStock
+        System.out.println("Obtener la suma del precio unitario de todos los productos agrupados por el número de existencias en el almacén");
+        Map<Integer, Double> collect = products.stream()
+                .collect( //en el metodo collect se especifican las funciones de agregacion
+                        Collectors.groupingBy( // deseamos agrupar
+                                Producto::getUnidadesEnExistencia, //agrupamos por existencias en stock
+                                Collectors.summingDouble( //el tipo de dato a sumar es double
+                                        Producto::getPrecioUnidad //sumamos el precio unitario
+                                )
+                        )
+                );
+
+        collect.forEach((stock, suma) -> System.out.printf("en stock: %s: suma: %s \n", stock, suma));
+        System.out.println();
+    }
+
+    private static void consultasHaving() {
+        // Having, filtros sobre los agregados o agrupamientos
+        // Select  unitsInStock, sum(unitPrice) from products GROUP BY unitsInStock HAVING sum(unitPrice) > 100
+        System.out.println("Obtener la suma del precio unitario de todos los productos agrupados por el número de existencias en el almacén, pero solo obtener aquellos registros cuya suma sea mayor a 100");
+        List<Map.Entry<Integer, Double>> entryList = products.stream()
+                .collect( //en el método collect se especifican las funciones de agregación
+                        Collectors.groupingBy( // deseamos agrupar
+                                Producto::getUnidadesEnExistencia, //agrupamos por existencias en stock
+                                Collectors.summingDouble( //sumamos el precio unitario el cual es tipo double
+                                        Producto::getPrecioUnidad // agrupamos por proveedor
+                                )
+                        )
+                ).entrySet()
+                .stream() //volvemos a generar un stream
+                .filter(p -> p.getValue() > 100) //filtramos (simula el having)
+                .collect(Collectors.toList());
+
+        entryList.forEach(list -> System.out.printf("en stock: %s, suma: %s\n", list.getKey(), list.getValue()));
+        System.out.println();
+    }
+
+    private static void consultasOtras() {
+        // prromedio de existencias en almacén
+        System.out.println("Promedio de existencias en almacén");
+        Double average = products.stream()
+                .collect(Collectors.averagingInt(Producto::getUnidadesEnExistencia));
+        System.out.printf("Promedio de existencias en almacén: %s", average);
+        System.out.println();
+
+        // Producto con el precio unitario más alto
+        System.out.println("Producto con el precio unitario más alto");
+        Optional<Producto> product = products.stream().max(Comparator.comparing(Producto::getPrecioUnidad));
+        System.out.println(product.get());
+        System.out.println();
+
+        // Podemos obtener el count, sum, min, max y average con una sola operación.
+        // Por ejemplo si queremos obtener estas estadísticas respecto al precio unitario
+        System.out.println("obtener el count, sum, min, max y average con una sola operación respecto al precio unitario");
+        DoubleSummaryStatistics statistics =
+                products.stream().collect(Collectors.summarizingDouble(Producto::getPrecioUnidad));
+        System.out.println(statistics);
+        System.out.println();
+
+        // Limitar el numero de productos devueltos
+        System.out.println("Limitar el numero de productos devueltos");
+        products.stream().limit(50); // limitamos a 50 productos
+        // Saltar hasta el elemento indicado y a partir de ahí devolver todos los elementos
+        System.out.println("Saltar hasta el elemento indicado y a partir de ahí devolver todos los elementos");
+        Stream<Producto> skip = products.stream().skip(5); //obtenemos los productos a partir del 6 (inclusive)
+        skip.forEach(System.out::println);
+        System.out.println();
+    }
+
 
 
 }

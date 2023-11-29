@@ -109,4 +109,17 @@ public class Producto implements Comparable<Producto> {
     public int compareTo(Producto o) {
         return getNombreProducto().compareTo(o.getNombreProducto());
     }
+    
+    public static Producto creaDesdeArray(String[] s){
+        String familia[] = {"carne","verdura","lacteo","cereal"};
+
+        return new Producto(
+                Integer.parseInt(s[0]), //idProducto
+                s[1], //nombreProducto
+                Integer.parseInt(s[2]), //idproveedor
+                Integer.parseInt(s[3]), // idCat
+                s[4], // cantPorUnidad
+                Double.parseDouble(s[5]),  //preunid
+                Integer.parseInt(s[6]),familia[Integer.parseInt(s[3]) % 4]);
+    }
 }
